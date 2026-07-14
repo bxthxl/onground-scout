@@ -1,6 +1,6 @@
-# OnGround Scout
+# Online Scout
 
-Vite React site for OnGround Scout, a home verification service for diaspora renters.
+Vite React site for Online Scout, a Canadian property verification service for remote renters and newcomers.
 
 The interface uses GSAP ScrollTrigger for the scroll narrative, image scale/fade motion, and word reveal section. Reduced-motion users receive a static experience.
 
