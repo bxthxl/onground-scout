@@ -47,7 +47,7 @@ const benefits = [
   {
     icon: ClockCounterClockwise,
     title: 'Save time from abroad',
-    copy: 'Send the listing once and get clear feedback — no chasing agents across time zones.',
+    copy: 'Send the listing once and get clear feedback  -  no chasing agents across time zones.',
   },
   {
     icon: UserCircleCheck,
@@ -57,7 +57,7 @@ const benefits = [
   {
     icon: CheckCircle,
     title: 'Move in with confidence',
-    copy: 'Know what you are renting before you arrive — not after the keys are handed over.',
+    copy: 'Know what you are renting before you arrive  -  not after the keys are handed over.',
   },
 ]
 
@@ -126,7 +126,7 @@ const packages = [
   {
     name: 'Consultation',
     price: '$30',
-    summary: 'Best when you want expert answers first — a one-on-one call with the owner before you commit.',
+    summary: 'Best when you want expert answers first  -  a one-on-one call with the owner before you commit.',
     visits: 'One 30-minute call',
     recommended: false,
     features: [
@@ -338,7 +338,7 @@ function App() {
       })
 
       // Cards cascade up as each group scrolls into view. Staggering items within a
-      // list is the legitimate kind of reveal — it fits what it reveals — rather
+      // list is the legitimate kind of reveal  -  it fits what it reveals  -  rather
       // than one identical fade bolted onto every section.
       const revealGroup = (selector: string, stagger: number) => {
         const items = gsap.utils.toArray<HTMLElement>(selector)
@@ -358,7 +358,7 @@ function App() {
       revealGroup('.package-card', 0.1)
 
       // Snaplistings-style card deck: sticky CSS does the pinning, and as each
-      // new testimonial rides up, the card beneath scales back and dims — the
+      // new testimonial rides up, the card beneath scales back and dims  -  the
       // depth cue that makes the pile read as a stack rather than an overlap.
       const stackCards = gsap.utils.toArray<HTMLElement>('.testimonial-card')
       stackCards.forEach((card, index) => {
@@ -431,7 +431,7 @@ function App() {
               actions.order.create({
                 purchase_units: [
                   {
-                    description: `OnGround Scout — ${checkoutPackage} package`,
+                    description: `OnGround Scout  -  ${checkoutPackage} package`,
                     amount: { value: totalDue.toFixed(2), currency_code: 'USD' },
                   },
                 ],
@@ -496,8 +496,8 @@ function App() {
         ? 'Consultation call'
         : form.inGta === 'Yes'
           ? `${form.city} (GTA)`
-          : `${form.city} (outside GTA — travel fee may apply)`,
-      property_link: isConsultation ? 'Consultation — 30-minute call' : links.join('\n'),
+          : `${form.city} (outside GTA  -  travel fee may apply)`,
+      property_link: isConsultation ? 'Consultation  -  30-minute call' : links.join('\n'),
       package_type: form.packageType,
       move_timeline: isConsultation
         ? 'Consultation call'
@@ -526,10 +526,10 @@ function App() {
     setStatus('success')
     setStatusMessage(
       skipped
-        ? `Thanks${firstName ? `, ${firstName}` : ''}. Your details are ready — to make sure they reach us, please also start a chat on WhatsApp or email us below.`
-        : `Thank you${firstName ? `, ${firstName}` : ''}. We've received your request — a scout coordinator will reply within 24 hours by email and WhatsApp.`,
+        ? `Thanks${firstName ? `, ${firstName}` : ''}. Your details are ready  -  to make sure they reach us, please also start a chat on WhatsApp or email us below.`
+        : `Thank you${firstName ? `, ${firstName}` : ''}. We've received your request  -  a scout coordinator will reply within 24 hours by email and WhatsApp.`,
     )
-    // Open the paywall for priced packages — the refund promise shows first,
+    // Open the paywall for priced packages  -  the refund promise shows first,
     // then payment. Add-on-only requests are confirmed by a coordinator instead.
     setCheckoutPackage(form.packageType)
     setCheckoutPref(form.paymentPref)
@@ -585,7 +585,7 @@ function App() {
             src={heroInterior}
             fetchPriority="high"
             decoding="async"
-            alt="A sunlit living room with floor-to-ceiling windows opening onto green trees — the kind of home a scout checks in person before you rent."
+            alt="A sunlit living room with floor-to-ceiling windows opening onto green trees  -  the kind of home a scout checks in person before you rent."
           />
           <div className="inspection-card primary-card">
             <span>Visit report</span>
@@ -743,7 +743,7 @@ function App() {
           <span className="eyebrow">Packages</span>
           <h2>Choose the level of confidence your move needs.</h2>
           <p>
-            Essential and Signature include the same checks — the difference is how
+            Essential and Signature include the same checks  -  the difference is how
             many apartments your scout visits. Not ready for a visit yet? Book a
             30-minute consultation call with the owner first.
           </p>
@@ -810,7 +810,7 @@ function App() {
         <p className="safety-note">
           <Lock size={18} weight="fill" />
           OnGround Scout is a verification service. We never collect your rent or
-          deposit — you only ever pay for the scouting package you choose.
+          deposit  -  you only ever pay for the scouting package you choose.
         </p>
       </section>
 
@@ -824,13 +824,13 @@ function App() {
           </p>
           <p className="safety-note">
             <Lock size={18} weight="fill" />
-            Pay securely with PayPal after you submit — covered by our
+            Pay securely with PayPal after you submit  -  covered by our
             full-refund promise until your scout makes the trip.
           </p>
           <p className="safety-note">
             <MapPinArea size={18} weight="fill" />
             Please note: OnGround Scout is a young company and our coverage is
-            currently limited — for now we can only accept properties located
+            currently limited  -  for now we can only accept properties located
             within the Greater Toronto Area (GTA).
           </p>
           <div className="contact-list" aria-label="Contact options">
@@ -894,7 +894,7 @@ function App() {
               >
                 <option>Essential</option>
                 <option>Signature</option>
-                <option value="Consultation">Consultation — 30-minute call ($30)</option>
+                <option value="Consultation">Consultation  -  30-minute call ($30)</option>
                 <option>Just add-ons (e.g. airport pickup)</option>
               </select>
             </label>
@@ -1001,7 +1001,7 @@ function App() {
 
           {!isConsultation && (
             <p className="form-note">
-              If you don't have all your apartment listings yet, that's okay —
+              If you don't have all your apartment listings yet, that's okay  - 
               additional listings can be sent later by email or WhatsApp.
             </p>
           )}
@@ -1172,7 +1172,7 @@ function App() {
         </div>
         <p className="footer-note">
           © {new Date().getFullYear()} OnGround Scout · We never collect rent or
-          deposits — you only pay for the scouting package you choose.
+          deposits  -  you only pay for the scouting package you choose.
         </p>
       </footer>
 
@@ -1223,7 +1223,7 @@ function App() {
                 </p>
                 <div className="modal-actions">
                   <button className="button primary" type="button" onClick={() => setPayStep('pay')}>
-                    I understand — continue to payment
+                    I understand  -  continue to payment
                     <ArrowRight aria-hidden="true" weight="bold" />
                   </button>
                   <button className="button secondary" type="button" onClick={() => setPayStep('hidden')}>
@@ -1243,7 +1243,7 @@ function App() {
                   </div>
                   {discount > 0 && (
                     <div className="summary-row promo">
-                      <span>10% promo — until 31 October</span>
+                      <span>10% promo  -  until 31 October</span>
                       <span>−${discount}</span>
                     </div>
                   )}
@@ -1256,7 +1256,7 @@ function App() {
                   <p className="form-status success">
                     You chose Nigerian bank transfer. A coordinator will send the
                     account details by email
-                    {' '}— and WhatsApp if provided — within 24 hours to
+                    {' '} -  and WhatsApp if provided  -  within 24 hours to
                     complete this payment.
                   </p>
                 ) : PAYPAL_CLIENT_ID ? (
@@ -1268,7 +1268,7 @@ function App() {
                       href={`https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=${encodeURIComponent(
                         PAYPAL_EMAIL,
                       )}&item_name=${encodeURIComponent(
-                        `OnGround Scout — ${checkoutPackage} package`,
+                        `OnGround Scout  -  ${checkoutPackage} package`,
                       )}&amount=${totalDue.toFixed(2)}&currency_code=USD&no_shipping=1`}
                       target="_blank"
                       rel="noreferrer"
@@ -1291,7 +1291,7 @@ function App() {
                 <p className="refund-fineprint">
                   <Lock size={15} weight="fill" /> Paid securely through PayPal.
                   Full refund if you change your mind or we cannot reach the house
-                  owner — any time before the trip is made.
+                  owner  -  any time before the trip is made.
                 </p>
               </>
             )}
@@ -1299,7 +1299,7 @@ function App() {
             {payStep === 'paid' && (
               <>
                 <CheckCircle size={44} weight="duotone" className="modal-icon" />
-                <h3 id="paywall-title">Payment received — thank you!</h3>
+                <h3 id="paywall-title">Payment received  -  thank you!</h3>
                 <p>
                   Your {checkoutPackage} package is confirmed. A scout coordinator
                   will contact you within 24 hours by email and WhatsApp to plan
