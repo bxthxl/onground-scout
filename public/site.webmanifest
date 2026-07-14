@@ -1,0 +1,16 @@
+{
+  "name": "OnGround Scout",
+  "short_name": "OnGround Scout",
+  "description": "Local home verification for diaspora renters moving to the Greater Toronto Area.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#faf7f0",
+  "theme_color": "#14243d",
+  "icons": [
+    {
+      "src": "/favicon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}

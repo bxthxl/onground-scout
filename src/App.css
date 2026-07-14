@@ -1708,6 +1708,20 @@ textarea:focus {
     display: none;
   }
 
+  .site-header {
+    gap: 12px;
+    width: min(760px, calc(100% - 24px));
+  }
+
+  .site-header nav {
+    margin-left: auto;
+    margin-right: 0;
+  }
+
+  .hero-section {
+    padding-top: calc(86px + clamp(38px, 8vw, 70px));
+  }
+
   .footer-inner {
     grid-template-columns: 1fr;
   }
@@ -1733,6 +1747,19 @@ textarea:focus {
     position: static;
   }
 
+  .testimonial-card {
+    position: relative;
+    top: auto;
+    min-height: auto;
+    margin-bottom: 18px;
+  }
+
+  .testimonial-card:nth-child(2),
+  .testimonial-card:nth-child(3),
+  .testimonial-card:nth-child(4) {
+    top: auto;
+  }
+
   .accordion-stack {
     padding-bottom: 0;
   }
@@ -1750,8 +1777,23 @@ textarea:focus {
 }
 
 @media (max-width: 640px) {
+  .site-header {
+    top: 10px;
+    min-height: 58px;
+    padding: 7px 8px;
+    border-radius: 18px;
+  }
+
+  .brand .logo-image {
+    width: 44px;
+    height: 44px;
+    padding: 3px;
+  }
+
   .site-header nav a {
-    padding-inline: 11px;
+    min-height: 38px;
+    padding: 8px 9px;
+    font-size: 0.78rem;
   }
 
   .brand-name {
@@ -1762,8 +1804,30 @@ textarea:focus {
     padding-left: 8px;
   }
 
+  .hero-section,
+  .bento-section,
+  .packages-section,
+  .request-section,
+  .testimonials-section,
+  .desire-section,
+  .footer-inner,
+  .footer-note {
+    width: min(100% - 28px, 1180px);
+  }
+
+  .hero-section {
+    padding-top: 106px;
+  }
+
   h1 {
-    font-size: clamp(2.55rem, 11.5vw, 3.45rem);
+    font-size: clamp(2.35rem, 11vw, 3.1rem);
+    line-height: 1;
+    max-width: 11ch;
+  }
+
+  .hero-text {
+    font-size: 1rem;
+    line-height: 1.55;
   }
 
   .hero-actions,
@@ -1774,36 +1838,193 @@ textarea:focus {
 
   .hero-media-panel {
     border-radius: 16px;
+    margin-top: 34px;
   }
 
   .hero-photo {
-    height: 360px;
+    height: 330px;
   }
 
   .inspection-card {
-    max-width: 60%;
-    padding: 13px 15px;
+    position: static;
+    max-width: none;
+    margin: 0;
+    border-width: 0;
+    border-top: 1px solid rgb(20 36 61 / 0.08);
+    border-radius: 0;
+    background: white;
+    box-shadow: none;
+    padding: 14px 16px;
   }
 
   .inspection-card strong {
     font-size: 0.95rem;
   }
 
+  .promo-item {
+    gap: 18px;
+    padding-right: 18px;
+    font-size: 0.72rem;
+  }
+
   .bento-card,
-  .accordion-card {
-    padding: 24px;
+  .accordion-card,
+  .testimonial-card,
+  .admin-card,
+  .profile-card {
+    border-radius: 14px;
+    padding: 20px;
+  }
+
+  .bento-card {
+    min-height: auto;
+  }
+
+  .bento-card h2,
+  .desire-copy h2,
+  .section-heading h2,
+  .request-copy h2 {
+    font-size: clamp(2rem, 10vw, 2.75rem);
+    line-height: 1.04;
   }
 
   .accordion-card {
     grid-template-columns: 1fr;
+    min-height: auto;
   }
 
   .package-top {
-    flex-direction: column;
+    grid-template-columns: 1fr;
+    min-height: auto;
+    padding: 24px 22px;
+  }
+
+  .package-top strong,
+  .package-card--featured .package-top strong {
+    justify-self: start;
+    margin-top: 0;
+  }
+
+  .package-card {
+    min-height: auto;
+  }
+
+  .package-card ul,
+  .package-visits {
+    padding-inline: 22px;
+  }
+
+  .package-cta {
+    margin-inline: 22px;
+    white-space: normal;
   }
 
   .contact-list a {
-    width: auto;
+    width: 100%;
+    box-sizing: border-box;
+    justify-content: center;
+    border-radius: 14px;
+  }
+
+  .request-section {
+    padding-bottom: 72px;
+  }
+
+  .request-form {
+    padding: 20px;
+  }
+
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+
+  .checkbox.other-check {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .footer-brand .brand {
+    padding-left: 0;
+  }
+
+  .footer-contact a,
+  .footer-nav a {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+
+  .modal-overlay {
+    align-items: end;
+    padding: 10px;
+  }
+
+  .modal-card {
+    width: 100%;
+    max-height: 92dvh;
+    border-radius: 18px;
+    padding: 24px 18px;
+  }
+
+  .admin-shell {
+    width: min(100% - 24px, 1080px);
+    padding-top: 26px;
+  }
+
+  .admin-header,
+  .admin-toolbar,
+  .admin-actions {
+    align-items: stretch;
+    width: 100%;
+  }
+
+  .admin-toolbar > *,
+  .admin-actions > *,
+  .admin-tabs,
+  .admin-toolbar select {
+    width: 100%;
+  }
+
+  .admin-tabs button {
+    flex: 1;
+  }
+
+  .admin-date {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .profile-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 380px) {
+  .site-header {
+    width: calc(100% - 16px);
+  }
+
+  .site-header nav {
+    gap: 0;
+  }
+
+  .site-header nav a {
+    padding-inline: 7px;
+    font-size: 0.73rem;
+  }
+
+  .brand {
+    padding-left: 4px;
+  }
+
+  .brand .logo-image {
+    width: 40px;
+    height: 40px;
+  }
+
+  h1 {
+    font-size: clamp(2.1rem, 12vw, 2.55rem);
   }
 }
 

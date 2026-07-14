@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://ongroundscout.com/sitemap.xml
