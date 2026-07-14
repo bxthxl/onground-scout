@@ -329,10 +329,10 @@ function App() {
         '(max-width: 980px)': () => {
           ScrollTrigger.create({
             trigger: '.desire-section',
-            start: 'top 88px',
-            end: '+=620',
+            start: 'top 76px',
+            end: '+=420',
             pin: '.desire-copy',
-            pinSpacing: false,
+            pinSpacing: true,
           })
         },
       })
