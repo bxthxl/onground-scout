@@ -326,6 +326,15 @@ function App() {
             pinSpacing: false,
           })
         },
+        '(max-width: 980px)': () => {
+          ScrollTrigger.create({
+            trigger: '.desire-section',
+            start: 'top 88px',
+            end: '+=620',
+            pin: '.desire-copy',
+            pinSpacing: false,
+          })
+        },
       })
 
       // Cards cascade up as each group scrolls into view. Staggering items within a

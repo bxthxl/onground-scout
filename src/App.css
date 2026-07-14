@@ -571,6 +571,7 @@ h3 {
 }
 
 .desire-section {
+  position: relative;
   display: grid;
   grid-template-columns: minmax(0, 0.9fr) minmax(340px, 1fr);
   gap: clamp(36px, 7vw, 86px);
@@ -609,6 +610,8 @@ h3 {
 }
 
 .accordion-stack {
+  position: relative;
+  z-index: 1;
   display: grid;
   gap: var(--space-md);
   padding-bottom: var(--space-2xl);
@@ -1739,25 +1742,23 @@ textarea:focus {
   }
 
   .desire-section {
-    min-height: auto;
+    min-height: 940px;
+    align-items: start;
   }
 
-  .desire-copy,
   .request-copy {
     position: static;
   }
 
-  .testimonial-card {
+  .desire-copy {
     position: relative;
-    top: auto;
-    min-height: auto;
-    margin-bottom: 18px;
+    z-index: 0;
+    padding-top: 0;
   }
 
-  .testimonial-card:nth-child(2),
-  .testimonial-card:nth-child(3),
-  .testimonial-card:nth-child(4) {
-    top: auto;
+  .accordion-stack {
+    z-index: 2;
+    margin-top: clamp(280px, 42vh, 390px);
   }
 
   .accordion-stack {
@@ -1888,9 +1889,56 @@ textarea:focus {
     line-height: 1.04;
   }
 
+  .desire-section {
+    min-height: 900px;
+    overflow: visible;
+  }
+
+  .desire-copy {
+    width: 100%;
+    pointer-events: none;
+  }
+
+  .desire-copy .eyebrow {
+    position: relative;
+    z-index: 1;
+  }
+
+  .desire-copy h2 {
+    position: relative;
+    z-index: 0;
+    margin-bottom: 14px;
+    color: rgb(20 36 61 / 0.14);
+    font-size: clamp(3.2rem, 17vw, 5.8rem);
+    line-height: 0.9;
+    max-width: 7ch;
+  }
+
+  .scrub-copy {
+    position: relative;
+    z-index: 1;
+    max-width: 30ch;
+    font-size: 1.05rem;
+    color: rgb(86 96 114 / 0.78);
+  }
+
+  .accordion-stack {
+    margin-top: 300px;
+  }
+
+  .desire-photo {
+    position: relative;
+    z-index: 3;
+    height: 360px;
+    border: 8px solid var(--paper);
+    box-shadow: 0 34px 80px rgb(20 36 61 / 0.24);
+  }
+
   .accordion-card {
     grid-template-columns: 1fr;
     min-height: auto;
+    position: relative;
+    z-index: 3;
   }
 
   .package-top {
