@@ -8,7 +8,7 @@ import './index.css'
 import App from './App.tsx'
 import Admin from './Admin.tsx'
 
-// Hidden admin route: open the site with #admin (e.g. https://yoursite.com/#admin)
+// Hidden owner route: open the site with #admin (e.g. https://yoursite.com/#admin)
 // to reach the applications dashboard. Everything else renders the public site.
 function Root() {
   const [isAdmin, setIsAdmin] = useState(window.location.hash === '#admin')

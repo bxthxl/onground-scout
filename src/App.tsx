@@ -1,28 +1,22 @@
-﻿import { type FormEvent, type ReactNode, useEffect, useMemo, useRef, useState } from 'react'
-import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
+import { type FormEvent, useEffect, useMemo, useRef, useState } from 'react'
 import { useGSAP } from '@gsap/react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import {
   AirplaneTilt,
   ArrowRight,
+  CalendarCheck,
   CheckCircle,
-  ClipboardText,
+  ClockCounterClockwise,
   EnvelopeSimple,
-  FileArrowDown,
-  HouseLine,
   InstagramLogo,
   Lock,
-  List,
-  MagnifyingGlass,
   MapPinArea,
-  MapTrifold,
   Phone,
   Quotes,
   ShieldCheck,
   Sparkle,
   Star,
-  Student,
   UserCircleCheck,
   WarningCircle,
   WhatsappLogo,
@@ -30,20 +24,13 @@ import {
 } from '@phosphor-icons/react'
 import logo from './assets/onground-logo.png'
 // Stock photography from Unsplash (free license, no attribution required).
-// Replace with Online Scout's own visit photos when available.
+// Replace with OnGround Scout's own visit photos when available.
 import heroInterior from './assets/hero-interior.jpg'
 import visitApartment from './assets/visit-apartment.jpg'
 import visitWindow from './assets/visit-window.jpg'
 import client1 from './assets/client-1.jpeg'
 import client2 from './assets/client-2.jpeg'
 import { submitScoutRequest } from './lib/supabase'
-import {
-  fadeUp,
-  scaleIn,
-  slideFromLeft,
-  staggerContainer,
-  viewportOnce,
-} from './lib/animations'
 import './App.css'
 
 gsap.registerPlugin(ScrollTrigger)
@@ -51,24 +38,38 @@ gsap.registerPlugin(ScrollTrigger)
 type FormStatus = 'idle' | 'loading' | 'success' | 'error'
 type PayStep = 'hidden' | 'disclaimer' | 'pay' | 'paid'
 
-const navItems = [
-  ['How It Works', '#how-it-works'],
-  ['Services', '#packages'],
-  ['What We Check', '#checks'],
-  ['For Newcomers', '#audiences'],
-  ['Become a Scout', '#request'],
-  ['FAQ', '#faq'],
-] as const
-
-const trustItems = [
-  'Identity-checked Scouts',
-  'Timestamped photos and video',
-  'Independent on-site observations',
-  'Secure online booking',
-  'Canada-based service',
+const benefits = [
+  {
+    icon: ShieldCheck,
+    title: 'Avoid rental scams',
+    copy: 'A local scout checks the property before you send any money or sign anything.',
+  },
+  {
+    icon: ClockCounterClockwise,
+    title: 'Save time from abroad',
+    copy: 'Send the listing once and get clear feedback  -  no chasing agents across time zones.',
+  },
+  {
+    icon: UserCircleCheck,
+    title: 'Honest local insight',
+    copy: 'Someone who knows the area reads the building, the street, and the warning signs.',
+  },
+  {
+    icon: CheckCircle,
+    title: 'Move in with confidence',
+    copy: 'Know what you are renting before you arrive  -  not after the keys are handed over.',
+  },
 ]
 
-// Real client testimonials shared by the admin. Photos live in src/assets.
+// The four checks a scout runs on every visit (shown in the Proof section).
+const scoutChecks = [
+  'Does the home match the listing?',
+  'What condition is the building really in?',
+  'What is the street and area like?',
+  'Any red flags in the documents?',
+]
+
+// Real client testimonials shared by the owner. Photos live in src/assets.
 type Testimonial = {
   photo?: string
   name: string
@@ -82,14 +83,14 @@ const testimonials: Testimonial[] = [
     name: 'Verified client',
     location: 'Moved to Canada',
     quote:
-      'I had a great experience using Online Scout to secure an apartment before arriving in Canada. The process was smooth, transparent, and stress-free. They provided genuine listings, answered all my questions promptly, and helped me find a place that matched my budget and preferences. Having accommodation sorted before landing made my transition to Canada much easier. I highly recommend Online Scout to anyone looking for reliable housing support before moving to Canada.',
+      'I had a great experience using Onground Scout to secure an apartment before arriving in Canada. The process was smooth, transparent, and stress-free. They provided genuine listings, answered all my questions promptly, and helped me find a place that matched my budget and preferences. Having accommodation sorted before landing made my transition to Canada much easier. I highly recommend Onground Scout to anyone looking for reliable housing support before moving to Canada.',
   },
   {
     photo: client2,
     name: 'Verified client',
-    location: 'International student, Canada',
+    location: 'International student · Canada',
     quote:
-      "When I got my Canadian student visa, I thought everything was set. A friend had promised I could stay with him temporarily until I found my own apartment, but he backed out at the last minute. I was confused and didn't know what to do.\n\nThankfully, I found Online Scout. They took the stress off me and helped me secure a great apartment quickly. Their support made my transition to Canada much easier. I highly recommend them to anyone moving to Canada!",
+      "When I got my Canadian student visa, I thought everything was set. A friend had promised I could stay with him temporarily until I found my own apartment, but he backed out at the last minute. I was confused and didn't know what to do.\n\nThankfully, I found OngroundScouts. They took the stress off me and helped me secure a great apartment quickly. Their support made my transition to Canada much easier. I highly recommend them to anyone moving to Canada!",
   },
 ]
 
@@ -125,7 +126,7 @@ const packages = [
   {
     name: 'Consultation',
     price: '$30',
-    summary: 'Best when you want expert answers first  -  a one-on-one call with a coordinator before you commit.',
+    summary: 'Best when you want expert answers first  -  a one-on-one call with the owner before you commit.',
     visits: 'One 30-minute call',
     recommended: false,
     features: [
@@ -139,75 +140,16 @@ const packages = [
 
 const processSteps = [
   {
-    title: 'Send us the property listing',
-    copy: 'Share the address, listing link, move timeline, and what you want checked.',
+    title: 'Send the house details',
+    copy: 'Share the listing link, address, budget, timeline, and anything you care about.',
   },
   {
-    title: 'A local Scout visits the property',
-    copy: 'Your Scout confirms visible details, records photos and video, and notes concerns.',
+    title: 'Scout visit and checks',
+    copy: 'OnGround Scout visits the property, records evidence, and checks for red flags.',
   },
   {
-    title: 'Receive photos, video and a report',
-    copy: 'You get organized evidence and plain-language feedback before you commit.',
-  },
-]
-
-const concerns = [
-  'Misleading listings',
-  'Pressure to pay quickly',
-  'Hidden property damage',
-  'Unclear neighbourhood details',
-  'No way to attend in person',
-  'Unverified address or exterior',
-]
-
-const scoutCheckCards = [
-  ['Address and exterior confirmation', HouseLine],
-  ['Unit condition', ShieldCheck],
-  ['Visible damage', WarningCircle],
-  ['Appliances and utilities', Sparkle],
-  ['Photos and video', ClipboardText],
-  ['Neighbourhood observations', MapTrifold],
-  ['Listing-detail comparison', MagnifyingGlass],
-  ['Optional live video walkthrough', WhatsappLogo],
-] as const
-
-const audienceCards = [
-  ['International students', Student],
-  ['Newcomers to Canada', MapPinArea],
-  ['Families relocating', HouseLine],
-  ['Remote workers', ClipboardText],
-  ['Parents arranging student housing', UserCircleCheck],
-  ['Out-of-town renters', AirplaneTilt],
-] as const
-
-const sampleReportTabs = [
-  'Overview',
-  'Rooms',
-  'Issues',
-  'Scout notes',
-]
-
-const faqs = [
-  {
-    question: 'Does Online Scout rent the property for me?',
-    answer:
-      'No. Online Scout provides property viewing, verification and information services. You make the final rental decision and pay landlords or property managers directly.',
-  },
-  {
-    question: 'Can I request a live video walkthrough?',
-    answer:
-      'Yes. You can include that in your request. Availability depends on property access and the package or add-on selected.',
-  },
-  {
-    question: 'What areas do you currently cover?',
-    answer:
-      'Current standard coverage is focused on the Greater Toronto Area. Requests outside the usual service area may require confirmation and an additional travel fee.',
-  },
-  {
-    question: 'When do I pay?',
-    answer:
-      'You submit your request first. Payment is handled through the booking flow or confirmed by a coordinator based on your selected payment preference.',
+    title: 'Receive clear feedback',
+    copy: 'You get photos, videos, notes, and a call so you can decide from anywhere.',
   },
 ]
 
@@ -220,8 +162,8 @@ const PHONE_DISPLAY = '+1 (437) 455-7749'
 // --- Payments ----------------------------------------------------------------
 // Two ways to get paid, in order of preference:
 // 1. VITE_PAYPAL_CLIENT_ID set in .env (needs a free PayPal Business upgrade)
-//    -> embedded smart buttons with card support.
-// 2. No Client ID -> a direct PayPal payment link to PAYPAL_EMAIL below. Works
+//    → embedded smart buttons with card support.
+// 2. No Client ID → a direct PayPal payment link to PAYPAL_EMAIL below. Works
 //    with a normal PayPal account; the payer is sent to paypal.com in a new tab.
 const PAYPAL_CLIENT_ID = (import.meta.env.VITE_PAYPAL_CLIENT_ID as string | undefined) ?? ''
 const PAYPAL_EMAIL = 'Nma.georgenwaeke@gmail.com'
@@ -285,8 +227,8 @@ const GTA_CITIES = [
 const PAYMENT_PREFS = ['PayPal', 'Nigerian Bank Transfer', "I'm happy to use either option"]
 
 const ACKNOWLEDGEMENTS = [
-  'I understand Online Scout provides viewing and information services only.',
-  'I understand Online Scout does not sign leases or agreements on my behalf.',
+  'I understand OnGround Scout provides viewing and information services only.',
+  'I understand OnGround Scout does not sign leases or agreements on my behalf.',
   'I understand I will pay landlords/property managers directly.',
   'I understand apartment availability is not guaranteed.',
   'I understand the final rental decision is mine.',
@@ -314,68 +256,8 @@ const initialForm = {
   confirmName: '',
 }
 
-function Reveal({
-  children,
-  className,
-  variant = fadeUp,
-}: {
-  children: ReactNode
-  className?: string
-  variant?: typeof fadeUp
-}) {
-  return (
-    <motion.div
-      className={className}
-      variants={variant}
-      initial="hidden"
-      whileInView="visible"
-      viewport={viewportOnce}
-    >
-      {children}
-    </motion.div>
-  )
-}
-
-function FaqItem({
-  question,
-  answer,
-  open,
-  onToggle,
-}: {
-  question: string
-  answer: string
-  open: boolean
-  onToggle: () => void
-}) {
-  return (
-    <article className="faq-item">
-      <button type="button" aria-expanded={open} onClick={onToggle}>
-        <span>{question}</span>
-        <motion.span animate={{ rotate: open ? 45 : 0 }} transition={{ duration: 0.18 }}>
-          +
-        </motion.span>
-      </button>
-      <AnimatePresence initial={false}>
-        {open && (
-          <motion.div
-            className="faq-answer"
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.24, ease: [0.23, 1, 0.32, 1] }}
-          >
-            <p>{answer}</p>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </article>
-  )
-}
-
 function App() {
   const pageRef = useRef<HTMLElement | null>(null)
-  const heroVisualRef = useRef<HTMLDivElement | null>(null)
-  const processPathRef = useRef<SVGPathElement | null>(null)
   const [form, setForm] = useState(initialForm)
   const [status, setStatus] = useState<FormStatus>('idle')
   const [statusMessage, setStatusMessage] = useState('')
@@ -383,11 +265,7 @@ function App() {
   const [checkoutPackage, setCheckoutPackage] = useState('')
   const [checkoutPref, setCheckoutPref] = useState('')
   const [payError, setPayError] = useState('')
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [openFaq, setOpenFaq] = useState(0)
-  const [activeReportTab, setActiveReportTab] = useState(0)
   const paypalRef = useRef<HTMLDivElement | null>(null)
-  const reduceMotion = useReducedMotion()
 
   const isConsultation = form.packageType === 'Consultation'
   const basePrice = PACKAGE_PRICES[checkoutPackage]
@@ -399,53 +277,104 @@ function App() {
     () => {
       if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
 
-      if (heroVisualRef.current) {
+      // The hero entrance is pure CSS (see .hero-copy / .hero-media-panel in App.css)
+      // so it stays smooth during the heavy initial page load; GSAP is reserved for
+      // the scroll-driven scrub and pin below, which genuinely need it.
+      gsap.utils.toArray<HTMLElement>('.motion-image').forEach((image) => {
         gsap.fromTo(
-          heroVisualRef.current,
-          { scale: 0.96, opacity: 0, y: 18 },
+          image,
+          { scale: 0.84, opacity: 0.38, filter: 'contrast(90%) saturate(80%)' },
           {
             scale: 1,
             opacity: 1,
-            y: 0,
-            duration: 0.72,
-            ease: 'power3.out',
-            delay: 0.18,
-          },
-        )
-      }
-
-      if (processPathRef.current && window.matchMedia('(min-width: 769px)').matches) {
-        const length = processPathRef.current.getTotalLength()
-        gsap.set(processPathRef.current, {
-          strokeDasharray: length,
-          strokeDashoffset: length,
-        })
-        gsap.to(processPathRef.current, {
-          strokeDashoffset: 0,
-          duration: 1.1,
-          ease: 'power2.out',
-          scrollTrigger: {
-            trigger: '.process-section',
-            start: 'top 72%',
-            once: true,
-          },
-        })
-      }
-
-      gsap.utils.toArray<HTMLElement>('.subtle-scroll').forEach((item) => {
-        gsap.fromTo(
-          item,
-          { y: 20 },
-          {
-            y: -12,
+            filter: 'contrast(112%) saturate(100%)',
+            ease: 'none',
             scrollTrigger: {
-              trigger: item,
-              start: 'top bottom',
-              end: 'bottom top',
+              trigger: image,
+              start: 'top 88%',
+              end: 'bottom 42%',
               scrub: true,
             },
           },
         )
+      })
+
+      gsap.utils.toArray<HTMLElement>('.reveal-word').forEach((word, index) => {
+        gsap.fromTo(
+          word,
+          { opacity: 0.16 },
+          {
+            opacity: 1,
+            ease: 'none',
+            scrollTrigger: {
+              trigger: '.scrub-copy',
+              start: `top+=${index * 12} 78%`,
+              end: `top+=${index * 12 + 140} 48%`,
+              scrub: true,
+            },
+          },
+        )
+      })
+
+      ScrollTrigger.matchMedia({
+        '(min-width: 981px)': () => {
+          ScrollTrigger.create({
+            trigger: '.desire-section',
+            start: 'top top',
+            end: 'bottom bottom',
+            pin: '.desire-copy',
+            pinSpacing: false,
+          })
+        },
+        '(max-width: 980px)': () => {
+          ScrollTrigger.create({
+            trigger: '.desire-section',
+            start: 'top 76px',
+            end: '+=420',
+            pin: '.desire-copy',
+            pinSpacing: true,
+          })
+        },
+      })
+
+      // Cards cascade up as each group scrolls into view. Staggering items within a
+      // list is the legitimate kind of reveal  -  it fits what it reveals  -  rather
+      // than one identical fade bolted onto every section.
+      const revealGroup = (selector: string, stagger: number) => {
+        const items = gsap.utils.toArray<HTMLElement>(selector)
+        const trigger = items[0]?.parentElement
+        if (!trigger) return
+        gsap.from(items, {
+          opacity: 0,
+          y: 28,
+          duration: 0.6,
+          ease: 'power3.out',
+          stagger,
+          scrollTrigger: { trigger, start: 'top 82%', once: true },
+        })
+      }
+
+      revealGroup('.bento-card', 0.07)
+      revealGroup('.package-card', 0.1)
+
+      // Snaplistings-style card deck: sticky CSS does the pinning, and as each
+      // new testimonial rides up, the card beneath scales back and dims  -  the
+      // depth cue that makes the pile read as a stack rather than an overlap.
+      const stackCards = gsap.utils.toArray<HTMLElement>('.testimonial-card')
+      stackCards.forEach((card, index) => {
+        const next = stackCards[index + 1]
+        if (!next) return
+        gsap.to(card, {
+          scale: 0.93,
+          filter: 'brightness(0.55)',
+          ease: 'none',
+          scrollTrigger: {
+            trigger: next,
+            start: 'top 95%',
+            end: 'top 30%',
+            scrub: true,
+          },
+        })
       })
     },
     { scope: pageRef },
@@ -465,20 +394,6 @@ function App() {
       window.removeEventListener('keydown', onKey)
     }
   }, [payStep])
-
-  useEffect(() => {
-    if (!mobileMenuOpen) return
-    const previous = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setMobileMenuOpen(false)
-    }
-    window.addEventListener('keydown', onKey)
-    return () => {
-      document.body.style.overflow = previous
-      window.removeEventListener('keydown', onKey)
-    }
-  }, [mobileMenuOpen])
 
   useEffect(() => {
     const scrollToHash = () => {
@@ -516,7 +431,7 @@ function App() {
               actions.order.create({
                 purchase_units: [
                   {
-                    description: `Online Scout  -  ${checkoutPackage} package`,
+                    description: `OnGround Scout  -  ${checkoutPackage} package`,
                     amount: { value: totalDue.toFixed(2), currency_code: 'USD' },
                   },
                 ],
@@ -547,7 +462,7 @@ function App() {
   const whatsappText = useMemo(
     () =>
       encodeURIComponent(
-        `Hello Online Scout, I need help verifying a home.\nName: ${form.fullName || ''}\nPackage: ${
+        `Hello OnGround Scout, I need help verifying a home.\nName: ${form.fullName || ''}\nPackage: ${
           form.packageType || ''
         }\nListing: ${form.listingLinks.find((link) => link.trim()) || ''}`,
       ),
@@ -586,7 +501,7 @@ function App() {
       package_type: form.packageType,
       move_timeline: isConsultation
         ? 'Consultation call'
-        : `Move-in: ${form.moveInDate} / Viewings: ${form.timeframe}`,
+        : `Move-in: ${form.moveInDate} · Viewings: ${form.timeframe}`,
       message: [
         ...(isConsultation ? [] : [`Within GTA: ${form.inGta}`, `Checks: ${checks.join(', ')}`]),
         form.landlordQuestions.trim() ? `Questions for landlord: ${form.landlordQuestions.trim()}` : '',
@@ -624,291 +539,220 @@ function App() {
     setForm(initialForm)
   }
 
+  const scrubWords =
+    'Distance should not force you to guess. OnGround Scout turns a listing into evidence you can inspect, question, and trust before the move begins.'.split(
+      ' ',
+    )
+
   return (
-    <main ref={pageRef} className="page-shell online-scout">
-      <header className="site-header">
-        <a className="brand" href="#top" aria-label="Online Scout home">
-          <img className="logo-image" src={logo} alt="" />
-          <span className="brand-name">Online Scout</span>
-        </a>
-        <nav aria-label="Primary navigation">
-          {navItems.map(([label, href]) => (
-            <a key={href} href={href}>
-              {label}
-            </a>
-          ))}
-        </nav>
-        <div className="nav-actions">
-          <a className="button secondary header-signin" href="#admin">
-            Sign In
+    <main ref={pageRef} className="page-shell">
+      <div className="hero-dark">
+        <header className="site-header">
+          <a className="brand" href="#top" aria-label="OnGround Scout home">
+            <img className="logo-image" src={logo} alt="" />
+            <span className="brand-name">OnGround Scout</span>
           </a>
+          <nav aria-label="Primary navigation">
+            <a href="#proof">Proof</a>
+            <a href="#packages">Packages</a>
+            <a href="#request">Request</a>
+          </nav>
           <a className="button primary header-cta" href="#request">
-            Book a Property Check
+            Get connected
           </a>
-          <button
-            className="mobile-menu-button"
-            type="button"
-            aria-label="Open menu"
-            aria-expanded={mobileMenuOpen}
-            onClick={() => setMobileMenuOpen(true)}
-          >
-            <List size={22} weight="bold" />
-          </button>
-        </div>
-      </header>
+        </header>
 
-      <AnimatePresence>
-        {mobileMenuOpen && (
-          <motion.div
-            className="mobile-menu"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <motion.div
-              className="mobile-menu-panel"
-              initial={{ y: -18, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: -18, opacity: 0 }}
-            >
-              <div className="mobile-menu-head">
-                <span>Online Scout</span>
-                <button type="button" aria-label="Close menu" onClick={() => setMobileMenuOpen(false)}>
-                  <X size={20} weight="bold" />
-                </button>
-              </div>
-              {navItems.map(([label, href]) => (
-                <a key={href} href={href} onClick={() => setMobileMenuOpen(false)}>
-                  {label}
-                </a>
-              ))}
-              <a className="button primary" href="#request" onClick={() => setMobileMenuOpen(false)}>
-                Book a Property Check
-              </a>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <section className="hero-section os-hero" id="top">
+        <section className="hero-section" id="top">
         <div className="hero-copy">
-          <span className="eyebrow">
-            Canada-based property checks
-          </span>
-          <h1>See the property before you send the deposit.</h1>
+          <h1>Your eyes on the ground before you rent from abroad.</h1>
           <p className="hero-text">
-            A trusted local Scout visits the property, verifies key details, records
-            photos and video, and sends you a clear report before you commit.
+            Local property visits, red-flag checks, videos, photos, and plain
+            feedback for people moving from overseas.
           </p>
           <div className="hero-actions">
             <a className="button primary" href="#request">
-              Book a Property Check <ArrowRight aria-hidden="true" weight="bold" />
+              Request a scout <ArrowRight aria-hidden="true" weight="bold" />
             </a>
-            <a className="button secondary" href="#how-it-works">
-              How It Works
+            <a className="button secondary" href="#packages">
+              Compare packages
             </a>
           </div>
         </div>
 
-        <div className="hero-media-panel scout-visual" ref={heroVisualRef}>
+        <div className="hero-media-panel" aria-label="A home verified by an OnGround Scout">
           <img
             className="hero-photo"
             src={heroInterior}
             fetchPriority="high"
             decoding="async"
-            alt="A bright Canadian apartment interior being reviewed before a rental decision."
+            alt="A sunlit living room with floor-to-ceiling windows opening onto green trees  -  the kind of home a scout checks in person before you rent."
           />
-          <motion.div className="inspection-card primary-card subtle-scroll" variants={scaleIn}>
-            <span>Sample visit evidence</span>
-            <strong>Photos, video, address checks and Scout notes.</strong>
-          </motion.div>
-          <motion.div className="inspection-card secondary-card subtle-scroll" variants={scaleIn}>
-            <span>
-              <ShieldCheck size={15} weight="fill" /> Checked before payment
-            </span>
-            <strong>Independent observations before you commit.</strong>
-          </motion.div>
-        </div>
-      </section>
-
-      <motion.section
-        className="trust-strip"
-        variants={staggerContainer}
-        initial="hidden"
-        whileInView="visible"
-        viewport={viewportOnce}
-      >
-        {trustItems.map((item) => (
-          <motion.div variants={fadeUp} key={item}>
-            <CheckCircle size={18} weight="fill" />
-            {item}
-          </motion.div>
-        ))}
-      </motion.section>
-
-      <section className="process-section" id="how-it-works">
-        <Reveal className="section-heading">
-          <span className="eyebrow">How it works</span>
-          <h2>From listing link to clear verification report.</h2>
-          <p>Simple enough for international renters, detailed enough for high-stakes decisions.</p>
-        </Reveal>
-        <div className="process-wrap">
-          <svg className="process-route" viewBox="0 0 760 120" aria-hidden="true">
-            <path ref={processPathRef} d="M30 72 C190 8 302 118 430 58 C545 6 612 54 730 38" />
-          </svg>
-          <motion.div
-            className="process-grid"
-            variants={staggerContainer}
-            initial="hidden"
-            whileInView="visible"
-            viewport={viewportOnce}
-          >
-            {processSteps.map((step, index) => (
-              <motion.article className="process-card" variants={fadeUp} key={step.title}>
-                <span>{index + 1}</span>
-                <h3>{step.title}</h3>
-                <p>{step.copy}</p>
-              </motion.article>
-            ))}
-          </motion.div>
-        </div>
-      </section>
-
-      <section className="problem-section">
-        <Reveal className="problem-copy" variant={slideFromLeft}>
-          <span className="eyebrow">Safer decisions from a distance</span>
-          <h2>Renting from a distance should not require blind trust.</h2>
-          <p>
-            Online Scout helps you slow the decision down, check what can be checked,
-            and avoid sending money based only on listing photos and pressure.
-          </p>
-        </Reveal>
-        <motion.div
-          className="concern-grid"
-          variants={staggerContainer}
-          initial="hidden"
-          whileInView="visible"
-          viewport={viewportOnce}
-        >
-          {concerns.map((concern) => (
-            <motion.article variants={fadeUp} key={concern}>
-              <WarningCircle size={20} weight="duotone" />
-              <span>{concern}</span>
-            </motion.article>
-          ))}
-        </motion.div>
-      </section>
-
-      <section className="checks-section" id="checks">
-        <Reveal className="section-heading">
-          <span className="eyebrow">What we check</span>
-          <h2>Practical observations, not vague reassurance.</h2>
-        </Reveal>
-        <motion.div
-          className="checks-grid"
-          variants={staggerContainer}
-          initial="hidden"
-          whileInView="visible"
-          viewport={viewportOnce}
-        >
-          {scoutCheckCards.map(([title, Icon]) => (
-            <motion.article
-              className="check-card"
-              variants={fadeUp}
-              whileHover={reduceMotion ? undefined : { y: -3 }}
-              key={title}
-            >
-              <Icon size={24} weight="duotone" />
-              <h3>{title}</h3>
-            </motion.article>
-          ))}
-        </motion.div>
-      </section>
-
-      <section className="report-section">
-        <Reveal className="section-heading">
-          <span className="eyebrow">Sample report</span>
-          <h2>A clear record of what your Scout saw.</h2>
-          <p>Example content only. Your real report depends on the property and visit.</p>
-        </Reveal>
-        <motion.div
-          className="report-preview"
-          variants={scaleIn}
-          initial="hidden"
-          whileInView="visible"
-          viewport={viewportOnce}
-        >
-          <div className="report-sidebar">
-            <strong>Sample report</strong>
-            <span>123 Example Street, Toronto</span>
-            <span>Visit time: 2:30 PM</span>
-            <span className="status-pill">Verification in review</span>
+          <div className="inspection-card primary-card">
+            <span>Visit report</span>
+            <strong>Photos, videos, red flags, and area notes.</strong>
           </div>
-          <div className="report-body">
-            <div className="report-tabs" role="tablist" aria-label="Sample report sections">
-              {sampleReportTabs.map((tab, index) => (
-                <button
-                  key={tab}
-                  type="button"
-                  className={activeReportTab === index ? 'active' : ''}
-                  onClick={() => setActiveReportTab(index)}
-                >
-                  {tab}
-                </button>
+          <div className="inspection-card secondary-card">
+            <span>
+              <ShieldCheck size={15} weight="fill" /> Checked in person
+            </span>
+            <strong>Seen on the ground before you commit.</strong>
+          </div>
+        </div>
+        </section>
+      </div>
+
+      <div
+        className="promo-marquee"
+        role="note"
+        aria-label="Limited offer: 10% off every package until 31 October"
+      >
+        <div className="promo-track" aria-hidden="true">
+          {[0, 1].map((group) => (
+            <div className="promo-group" key={group}>
+              {Array.from({ length: 4 }).map((_, index) => (
+                <span className="promo-item" key={index}>
+                  10% off every package
+                  <em>./</em>
+                  Book before 31 October
+                  <em>./</em>
+                </span>
               ))}
             </div>
-            <AnimatePresence mode="wait">
-              <motion.div
-                className="report-panel"
-                key={activeReportTab}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.22 }}
-              >
-                <h3>{sampleReportTabs[activeReportTab]}</h3>
-                <p>
-                  Exterior confirmed, room-by-room notes recorded, visible concerns
-                  listed, and photo/video evidence organized for review.
-                </p>
-                <div className="report-thumbs">
-                  {[heroInterior, visitApartment, visitWindow].map((src, index) => (
-                    <motion.img
-                      src={src}
-                      alt=""
-                      key={src}
-                      initial={{ opacity: 0, scale: 0.96 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: index * 0.06 }}
-                    />
+          ))}
+        </div>
+      </div>
+
+      <section className="bento-section" id="proof">
+        <div className="bento-grid">
+          <article className="bento-card bento-wide">
+            <MapPinArea size={34} weight="duotone" />
+            <h2>Listing photos hide more than they show.</h2>
+            <p>
+              A polished gallery will not warn you about the broken lift, the
+              landlord who never replies, or the address that is not really there.
+              On every visit, your scout answers the questions that matter:
+            </p>
+            <ul className="check-list">
+              {scoutChecks.map((check) => (
+                <li key={check}>
+                  <CheckCircle size={20} weight="fill" />
+                  {check}
+                </li>
+              ))}
+            </ul>
+          </article>
+          <article className="bento-card bento-image">
+            <img
+              className="bento-photo motion-image"
+              src={visitWindow}
+              loading="lazy"
+              decoding="async"
+              alt="A real apartment interior with a window looking onto the street outside, photographed during a scout visit."
+            />
+            <span className="photo-chip">What your scout sees on site</span>
+          </article>
+          {benefits.map((benefit) => {
+            const Icon = benefit.icon
+            return (
+              <article className="bento-card bento-small" key={benefit.title}>
+                <Icon size={28} weight="duotone" />
+                <h3>{benefit.title}</h3>
+                <p>{benefit.copy}</p>
+              </article>
+            )
+          })}
+        </div>
+      </section>
+
+      <section className="desire-section">
+        <div className="desire-copy">
+          <span className="eyebrow">How it works</span>
+          <h2>
+            See the place. Hear the truth. Decide without pressure.
+          </h2>
+          <p className="scrub-copy">
+            {scrubWords.map((word, index) => (
+              <span className="reveal-word" key={`${word}-${index}`}>
+                {word}{' '}
+              </span>
+            ))}
+          </p>
+        </div>
+
+        <div className="accordion-stack">
+          <img
+            className="desire-photo"
+            src={visitApartment}
+            loading="lazy"
+            decoding="async"
+            alt="A scout's photo of a lived-in apartment with natural light and plants."
+          />
+          {processSteps.map((step, index) => (
+            <article className="accordion-card" key={step.title}>
+              <span>{index + 1}</span>
+              <div>
+                <h3>{step.title}</h3>
+                <p>{step.copy}</p>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="testimonials-section" aria-label="What renters say">
+        <div className="section-heading">
+          <span className="eyebrow">Who we help</span>
+          <h2>Renters who moved without the fear.</h2>
+          <p>People who sent a scout before paying for a home they could not visit.</p>
+        </div>
+        <div className="testimonial-grid">
+          {testimonials.map((item, index) => (
+            <figure className="testimonial-card" key={`${item.name}-${index}`}>
+              <Quotes size={30} weight="fill" className="quote-mark" aria-hidden="true" />
+              <blockquote>{item.quote}</blockquote>
+              <figcaption>
+                {item.photo ? (
+                  <img
+                    src={item.photo}
+                    loading="lazy"
+                    decoding="async"
+                    alt={`${item.name}, OnGround Scout client`}
+                  />
+                ) : (
+                  <span className="avatar-fallback" aria-hidden="true">
+                    {item.name.charAt(0)}
+                  </span>
+                )}
+                <div className="testimonial-person">
+                  <strong>{item.name}</strong>
+                  <span>{item.location}</span>
+                </div>
+                <div className="stars" aria-label="Rated 5 out of 5">
+                  {Array.from({ length: 5 }).map((_, index) => (
+                    <Star key={`star-${index}`} size={15} weight="fill" />
                   ))}
                 </div>
-                <button className="button secondary" type="button">
-                  <FileArrowDown size={18} weight="bold" /> Download sample report
-                </button>
-              </motion.div>
-            </AnimatePresence>
-          </div>
-        </motion.div>
+              </figcaption>
+            </figure>
+          ))}
+        </div>
       </section>
 
       <section className="packages-section" id="packages">
-        <Reveal className="section-heading">
-          <span className="eyebrow">Services</span>
+        <div className="section-heading">
+          <span className="eyebrow">Packages</span>
           <h2>Choose the level of confidence your move needs.</h2>
           <p>
-            These packages reflect the services already available through Online Scout.
+            Essential and Signature include the same checks  -  the difference is how
+            many apartments your scout visits. Not ready for a visit yet? Book a
+            30-minute consultation call with the owner first.
           </p>
-        </Reveal>
+        </div>
+
         <div className="package-grid">
           {packages.map((item) => (
-            <motion.article
+            <article
               className={`package-card${item.recommended ? ' package-card--featured' : ''}`}
-              variants={fadeUp}
-              initial="hidden"
-              whileInView="visible"
-              viewport={viewportOnce}
-              whileHover={reduceMotion ? undefined : { y: -3 }}
               key={item.name}
             >
               {item.recommended && <span className="package-badge">Most chosen</span>}
@@ -938,96 +782,36 @@ function App() {
               <a
                 className="button primary package-cta"
                 href="#request"
-                onClick={() => setForm((current) => ({ ...current, packageType: item.name }))}
+                onClick={() =>
+                  setForm((current) => ({ ...current, packageType: item.name }))
+                }
               >
                 Choose {item.name} <ArrowRight aria-hidden="true" weight="bold" />
               </a>
-            </motion.article>
+            </article>
           ))}
         </div>
-      </section>
 
-      <section className="audience-section" id="audiences">
-        <Reveal className="section-heading">
-          <span className="eyebrow">For newcomers</span>
-          <h2>Built for people making housing decisions from somewhere else.</h2>
-        </Reveal>
-        <motion.div
-          className="audience-grid"
-          variants={staggerContainer}
-          initial="hidden"
-          whileInView="visible"
-          viewport={viewportOnce}
-        >
-          {audienceCards.map(([title, Icon]) => (
-            <motion.article variants={fadeUp} key={title}>
-              <Icon size={24} weight="duotone" />
-              <span>{title}</span>
-            </motion.article>
-          ))}
-        </motion.div>
-      </section>
-
-      <section className="testimonials-section" aria-label="What renters say">
-        <Reveal className="section-heading">
-          <span className="eyebrow">Trust evidence</span>
-          <h2>Renters who moved with more confidence.</h2>
-        </Reveal>
-        <div className="testimonial-grid">
-          {testimonials.map((item, index) => (
-            <figure className="testimonial-card" key={`${item.name}-${index}`}>
-              <Quotes size={30} weight="fill" className="quote-mark" aria-hidden="true" />
-              <blockquote>{item.quote}</blockquote>
-              <figcaption>
-                {item.photo && (
-                  <img
-                    src={item.photo}
-                    loading="lazy"
-                    decoding="async"
-                    alt={`${item.name}, Online Scout client`}
-                  />
-                )}
-                <div className="testimonial-person">
-                  <strong>{item.name}</strong>
-                  <span>{item.location}</span>
-                </div>
-                <div className="stars" aria-label="Rated 5 out of 5">
-                  {Array.from({ length: 5 }).map((_, index) => (
-                    <Star key={`star-${index}`} size={15} weight="fill" />
-                  ))}
-                </div>
-              </figcaption>
-            </figure>
-          ))}
+        <div className="addons">
+          <div>
+            <Sparkle size={24} weight="duotone" />
+            <span>Add-on services</span>
+          </div>
+          <p>
+            <AirplaneTilt size={22} weight="duotone" />
+            Airport pickup scheduling <strong>$20</strong>
+          </p>
+          <p>
+            <CalendarCheck size={22} weight="duotone" />
+            Additional visits <strong>$40</strong>
+          </p>
         </div>
-      </section>
 
-      <section className="faq-section" id="faq">
-        <Reveal className="section-heading">
-          <span className="eyebrow">FAQ</span>
-          <h2>Questions before you book.</h2>
-        </Reveal>
-        <div className="faq-list">
-          {faqs.map((faq, index) => (
-            <FaqItem
-              key={faq.question}
-              question={faq.question}
-              answer={faq.answer}
-              open={openFaq === index}
-              onToggle={() => setOpenFaq(openFaq === index ? -1 : index)}
-            />
-          ))}
-        </div>
-      </section>
-
-      <section className="final-cta">
-        <Reveal>
-          <h2>Ready to verify a property before you send money?</h2>
-          <p>Send the listing and a coordinator will help you choose the right check.</p>
-          <a className="button primary" href="#request">
-            Book a Property Check <ArrowRight aria-hidden="true" weight="bold" />
-          </a>
-        </Reveal>
+        <p className="safety-note">
+          <Lock size={18} weight="fill" />
+          OnGround Scout is a verification service. We never collect your rent or
+          deposit  -  you only ever pay for the scouting package you choose.
+        </p>
       </section>
 
       <section className="request-section" id="request">
@@ -1045,7 +829,7 @@ function App() {
           </p>
           <p className="safety-note">
             <MapPinArea size={18} weight="fill" />
-            Please note: Online Scout is a young company and our coverage is
+            Please note: OnGround Scout is a young company and our coverage is
             currently limited  -  for now we can only accept properties located
             within the Greater Toronto Area (GTA).
           </p>
@@ -1349,8 +1133,8 @@ function App() {
         <div className="footer-inner">
           <div className="footer-brand">
             <a className="brand" href="#top" aria-label="Back to top">
-              <img className="logo-image" src={logo} alt="Online Scout logo" />
-              <span>Online Scout</span>
+              <img className="logo-image" src={logo} alt="OnGround Scout logo" />
+              <span>OnGround Scout</span>
             </a>
             <p>
               Local property visits, red-flag checks, and honest feedback for
@@ -1387,7 +1171,7 @@ function App() {
           </div>
         </div>
         <p className="footer-note">
-          (c) {new Date().getFullYear()} Online Scout. We never collect rent or
+          © {new Date().getFullYear()} OnGround Scout · We never collect rent or
           deposits  -  you only pay for the scouting package you choose.
         </p>
       </footer>
@@ -1428,7 +1212,7 @@ function App() {
                   {checkoutPackage !== 'Consultation' && (
                     <li>
                       <CheckCircle size={20} weight="fill" />
-                      We are unable to reach the property contact for the home you want inspected
+                      We are unable to reach the owner of the house you want inspected
                     </li>
                   )}
                 </ul>
@@ -1460,7 +1244,7 @@ function App() {
                   {discount > 0 && (
                     <div className="summary-row promo">
                       <span>10% promo  -  until 31 October</span>
-                      <span>-${discount}</span>
+                      <span>−${discount}</span>
                     </div>
                   )}
                   <div className="summary-row total">
@@ -1484,7 +1268,7 @@ function App() {
                       href={`https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=${encodeURIComponent(
                         PAYPAL_EMAIL,
                       )}&item_name=${encodeURIComponent(
-                        `Online Scout  -  ${checkoutPackage} package`,
+                        `OnGround Scout  -  ${checkoutPackage} package`,
                       )}&amount=${totalDue.toFixed(2)}&currency_code=USD&no_shipping=1`}
                       target="_blank"
                       rel="noreferrer"
@@ -1506,8 +1290,8 @@ function App() {
                 )}
                 <p className="refund-fineprint">
                   <Lock size={15} weight="fill" /> Paid securely through PayPal.
-                  Full refund if you change your mind or we cannot reach the property
-                  contact  -  any time before the trip is made.
+                  Full refund if you change your mind or we cannot reach the house
+                  owner  -  any time before the trip is made.
                 </p>
               </>
             )}
@@ -1536,4 +1320,3 @@ function App() {
 }
 
 export default App
-

@@ -1,7 +1,7 @@
 {
-  "name": "Online Scout",
-  "short_name": "Online Scout",
-  "description": "Canadian property verification for remote renters, buyers, newcomers, and relocating families.",
+  "name": "OnGround Scout",
+  "short_name": "OnGround Scout",
+  "description": "Local home verification for diaspora renters moving to the Greater Toronto Area.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#faf7f0",

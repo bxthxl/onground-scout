@@ -43,7 +43,7 @@ function invoiceAmounts(pkg: string) {
 function paypalUrl(pkg: string, total: number) {
   return `https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=${encodeURIComponent(
     PAYPAL_EMAIL,
-  )}&item_name=${encodeURIComponent(`Online Scout - ${pkg} package`)}&amount=${total.toFixed(
+  )}&item_name=${encodeURIComponent(`OnGround Scout - ${pkg} package`)}&amount=${total.toFixed(
     2,
   )}&currency_code=USD&no_shipping=1`
 }
@@ -70,16 +70,16 @@ function invoiceLines(row: ScoutRequestRow) {
     'Pay securely with PayPal:',
     paypalUrl(row.package_type, total),
     '',
-    'Full-refund promise: if you change your mind, or we cannot reach the property contact, you get 100% of your money back any time before the trip is made.',
+    'Full-refund promise: if you change your mind, or we cannot reach the house owner, you get 100% of your money back any time before the trip is made.',
     '',
     `Questions? Reply to this email or WhatsApp us at ${OWNER_PHONE_DISPLAY}.`,
     '',
-    '- Online Scout',
+    '- OnGround Scout',
   ]
 }
 
 function invoiceEmailHref(row: ScoutRequestRow) {
-  const subject = `Online Scout invoice - ${row.package_type} package`
+  const subject = `OnGround Scout invoice - ${row.package_type} package`
   return `mailto:${row.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(
     invoiceLines(row).join('\n'),
   )}`
@@ -96,7 +96,7 @@ function profileWhatsAppHref(profile: ApplicantProfileRow) {
   if (!digits) return ''
   const first = profile.full_name.trim().split(' ')[0] || 'there'
   return `https://wa.me/${digits}?text=${encodeURIComponent(
-    `Hello ${first}, this is Online Scout following up on your request.`,
+    `Hello ${first}, this is OnGround Scout following up on your request.`,
   )}`
 }
 

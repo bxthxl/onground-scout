@@ -21,7 +21,7 @@ that scout assigned.
 
 ## Product Purpose
 
-Online Scout is a human-powered home-verification service. A local scout visits a
+OnGround Scout is a human-powered home-verification service. A local scout visits a
 property on the renter's behalf, documents it honestly, checks for red flags, and
 reports back so the renter can decide from anywhere. The site exists to (1) earn the
 trust of someone who has been burned or fears being burned, and (2) convert that

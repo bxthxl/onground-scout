@@ -1,16 +1,16 @@
 :root {
-  /* Online Scout brand palette: deep navy,
+  /* OnGround Scout brand palette, matched to the official flyer: deep navy,
      warm gold, on soft cream. Token names are kept (--gold etc.) so the whole
      stylesheet re-skins from here without renaming every rule. */
-  --paper: #f7f5f0; /* cream page background */
-  --paper-deep: #edf1f3;
-  --ink: #18242d; /* deep navy  -  headings, dark panels, primary text */
-  --ink-deep: #123047; /* near-black navy  -  dark hero + footer bands */
-  --ink-hover: #1d405a;
-  --muted: #64727d; /* navy-tinted body gray, ≥4.5:1 on paper & white */
-  --gold: #d83a3a; /* flyer gold  -  icons, badges, CTA fill */
-  --gold-deep: #a92c2c; /* deep gold  -  small labels + focus rings, ≥4.5:1 on white */
-  --soft-gold: #fdeaea; /* pale gold chip background */
+  --paper: #faf7f0; /* cream page background */
+  --paper-deep: #f2ecdf;
+  --ink: #14243d; /* deep navy  -  headings, dark panels, primary text */
+  --ink-deep: #0c1729; /* near-black navy  -  dark hero + footer bands */
+  --ink-hover: #1d3355;
+  --muted: #566072; /* navy-tinted body gray, ≥4.5:1 on paper & white */
+  --gold: #d99b32; /* flyer gold  -  icons, badges, CTA fill */
+  --gold-deep: #8f6410; /* deep gold  -  small labels + focus rings, ≥4.5:1 on white */
+  --soft-gold: #f7e9cd; /* pale gold chip background */
   --lime: #f4edda; /* warm cream accent block (was lime) */
   --shadow: 20 36 61; /* navy-tinted shadow rgb triple, used as rgb(var(--shadow) / a) */
   --radius: 16px;
