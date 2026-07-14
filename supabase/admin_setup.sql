@@ -1,0 +1,9 @@
+-- Reliable admin setup
+--
+-- If login is currently failing:
+-- 1. Run supabase/reset_broken_admin_auth.sql in the Supabase SQL editor.
+-- 2. Create the user in Supabase Dashboard > Authentication > Users.
+-- 3. Run supabase/link_admin_auth_user.sql in the Supabase SQL editor.
+--
+-- The older create_or_repair_admin_auth.sql file exists, but direct manual
+-- inserts into Supabase Auth can break sign-in on newer Auth schemas.
