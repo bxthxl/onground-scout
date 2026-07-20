@@ -268,6 +268,7 @@ function App() {
   const paypalRef = useRef<HTMLDivElement | null>(null)
 
   const isConsultation = form.packageType === 'Consultation'
+  const isOutsideGtaBlocked = !isConsultation && form.inGta === 'No'
   const basePrice = PACKAGE_PRICES[checkoutPackage]
   const promoOn = Date.now() <= PROMO_END.getTime()
   const discount = basePrice && promoOn ? Math.round(basePrice * PROMO_RATE) : 0
@@ -472,6 +473,14 @@ function App() {
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
 
+    if (isOutsideGtaBlocked) {
+      setStatus('error')
+      setStatusMessage(
+        'We can only accept properties inside the Greater Toronto Area right now. Please choose a GTA property or book a consultation instead.',
+      )
+      return
+    }
+
     const links = form.listingLinks.map((link) => link.trim()).filter(Boolean)
     const checks = [
       ...form.checks,
@@ -496,7 +505,7 @@ function App() {
         ? 'Consultation call'
         : form.inGta === 'Yes'
           ? `${form.city} (GTA)`
-          : `${form.city} (outside GTA  -  travel fee may apply)`,
+          : form.city,
       property_link: isConsultation ? 'Consultation  -  30-minute call' : links.join('\n'),
       package_type: form.packageType,
       move_timeline: isConsultation
@@ -932,22 +941,19 @@ function App() {
               </label>
             )}
             {!isConsultation && form.inGta === 'No' && (
-              <label>
-                Please specify the city
-                <input
-                  required
-                  value={form.city}
-                  onChange={(event) => setForm({ ...form, city: event.target.value })}
-                  placeholder="City name"
-                />
-                <span className="form-note">
-                  Properties outside our standard service area may be subject to an
-                  additional travel fee based on distance. We confirm any applicable
-                  fee before proceeding with your booking.
-                </span>
-              </label>
+              <div className="gta-disclaimer" role="alert" aria-live="polite">
+                <WarningCircle size={22} weight="fill" />
+                <div>
+                  <strong>We cannot accept properties outside the GTA yet.</strong>
+                  <p>
+                    Because the business is just starting, property checks are
+                    currently limited to the Greater Toronto Area. Please choose a GTA
+                    property or book a consultation if you want general guidance first.
+                  </p>
+                </div>
+              </div>
             )}
-            {!isConsultation && (
+            {!isConsultation && !isOutsideGtaBlocked && (
               <label>
                 Expected move-in date
                 <input
@@ -960,7 +966,7 @@ function App() {
             )}
           </div>
 
-          {!isConsultation && (
+          {!isConsultation && !isOutsideGtaBlocked && (
             <label>
               Preferred timeframe for completing the viewing(s)
               <select
@@ -978,7 +984,7 @@ function App() {
             </label>
           )}
 
-          {!isConsultation &&
+          {!isConsultation && !isOutsideGtaBlocked &&
             Array.from({ length: LINKS_BY_PACKAGE[form.packageType] ?? 1 }).map((_, index) => (
             <label key={`listing-${index}`}>
               <span>
@@ -999,14 +1005,14 @@ function App() {
             </label>
           ))}
 
-          {!isConsultation && (
+          {!isConsultation && !isOutsideGtaBlocked && (
             <p className="form-note">
               If you don't have all your apartment listings yet, that's okay  - 
               additional listings can be sent later by email or WhatsApp.
             </p>
           )}
 
-          {!isConsultation && (
+          {!isConsultation && !isOutsideGtaBlocked && (
           <fieldset className="checkbox-fieldset">
             <legend>What would you like us to check during the viewing?</legend>
             <div className="checkbox-grid">
@@ -1039,7 +1045,7 @@ function App() {
           </fieldset>
           )}
 
-          {!isConsultation && (
+          {!isConsultation && !isOutsideGtaBlocked && (
             <label>
               <span>
                 Questions you would like us to ask the landlord or property contact{' '}
@@ -1053,72 +1059,76 @@ function App() {
             </label>
           )}
 
-          <label>
-            <span>
-              Additional notes, instructions, or special requests{' '}
-              <span className="optional">(optional)</span>
-            </span>
-            <textarea
-              rows={4}
-              value={form.notes}
-              onChange={(event) => setForm({ ...form, notes: event.target.value })}
-            />
-          </label>
+          {!isOutsideGtaBlocked && (
+            <>
+              <label>
+                <span>
+                  Additional notes, instructions, or special requests{' '}
+                  <span className="optional">(optional)</span>
+                </span>
+                <textarea
+                  rows={4}
+                  value={form.notes}
+                  onChange={(event) => setForm({ ...form, notes: event.target.value })}
+                />
+              </label>
 
-          <label>
-            How would you prefer to pay if your booking request is accepted?
-            <select
-              required
-              value={form.paymentPref}
-              onChange={(event) => setForm({ ...form, paymentPref: event.target.value })}
-            >
-              <option value="" disabled>
-                Select a payment method
-              </option>
-              {PAYMENT_PREFS.map((option) => (
-                <option key={option}>{option}</option>
-              ))}
-            </select>
-          </label>
+              <label>
+                How would you prefer to pay if your booking request is accepted?
+                <select
+                  required
+                  value={form.paymentPref}
+                  onChange={(event) => setForm({ ...form, paymentPref: event.target.value })}
+                >
+                  <option value="" disabled>
+                    Select a payment method
+                  </option>
+                  {PAYMENT_PREFS.map((option) => (
+                    <option key={option}>{option}</option>
+                  ))}
+                </select>
+              </label>
 
-          <fieldset className="checkbox-fieldset">
-            <legend>Acknowledgement</legend>
-            <div className="checkbox-grid">
-              {ACKNOWLEDGEMENTS.map((item) => (
-                <label className="checkbox" key={item}>
-                  <input
-                    type="checkbox"
-                    required
-                    checked={form.acks.includes(item)}
-                    onChange={(event) =>
-                      setForm({
-                        ...form,
-                        acks: event.target.checked
-                          ? [...form.acks, item]
-                          : form.acks.filter((entry) => entry !== item),
-                      })
-                    }
-                  />
-                  {item}
-                </label>
-              ))}
-            </div>
-          </fieldset>
+              <fieldset className="checkbox-fieldset">
+                <legend>Acknowledgement</legend>
+                <div className="checkbox-grid">
+                  {ACKNOWLEDGEMENTS.map((item) => (
+                    <label className="checkbox" key={item}>
+                      <input
+                        type="checkbox"
+                        required
+                        checked={form.acks.includes(item)}
+                        onChange={(event) =>
+                          setForm({
+                            ...form,
+                            acks: event.target.checked
+                              ? [...form.acks, item]
+                              : form.acks.filter((entry) => entry !== item),
+                          })
+                        }
+                      />
+                      {item}
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
 
-          <label>
-            Type your full name to confirm
-            <input
-              required
-              value={form.confirmName}
-              onChange={(event) => setForm({ ...form, confirmName: event.target.value })}
-              placeholder="Your full name"
-            />
-          </label>
+              <label>
+                Type your full name to confirm
+                <input
+                  required
+                  value={form.confirmName}
+                  onChange={(event) => setForm({ ...form, confirmName: event.target.value })}
+                  placeholder="Your full name"
+                />
+              </label>
 
-          <button className="button primary submit-button" type="submit" disabled={status === 'loading'}>
-            {status === 'loading' ? 'Sending request' : 'Send request'}
-            <ArrowRight aria-hidden="true" weight="bold" />
-          </button>
+              <button className="button primary submit-button" type="submit" disabled={status === 'loading'}>
+                {status === 'loading' ? 'Sending request' : 'Send request'}
+                <ArrowRight aria-hidden="true" weight="bold" />
+              </button>
+            </>
+          )}
 
           {statusMessage && (
             <p className={`form-status ${status}`} role={status === 'error' ? 'alert' : 'status'}>
