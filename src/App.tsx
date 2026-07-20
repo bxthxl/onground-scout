@@ -256,9 +256,22 @@ const initialForm = {
   confirmName: '',
 }
 
+type BookingForm = typeof initialForm
+type ValidationErrors = Partial<Record<keyof BookingForm | `listingLink${number}` | 'checks', string>>
+
+function isValidHttpUrl(value: string) {
+  try {
+    const url = new URL(value)
+    return url.protocol === 'http:' || url.protocol === 'https:'
+  } catch {
+    return false
+  }
+}
+
 function App() {
   const pageRef = useRef<HTMLElement | null>(null)
   const [form, setForm] = useState(initialForm)
+  const [validationErrors, setValidationErrors] = useState<ValidationErrors>({})
   const [status, setStatus] = useState<FormStatus>('idle')
   const [statusMessage, setStatusMessage] = useState('')
   const [payStep, setPayStep] = useState<PayStep>('hidden')
@@ -273,6 +286,117 @@ function App() {
   const promoOn = Date.now() <= PROMO_END.getTime()
   const discount = basePrice && promoOn ? Math.round(basePrice * PROMO_RATE) : 0
   const totalDue = basePrice ? basePrice - discount : 0
+
+  const setFormValue = <Field extends keyof BookingForm>(field: Field, value: BookingForm[Field]) => {
+    setForm((current) => ({ ...current, [field]: value }))
+    setValidationErrors((current) => {
+      if (!current[field]) return current
+      const next = { ...current }
+      delete next[field]
+      return next
+    })
+    if (status === 'error') {
+      setStatus('idle')
+      setStatusMessage('')
+    }
+  }
+
+  const clearValidationError = (field: keyof ValidationErrors) => {
+    setValidationErrors((current) => {
+      if (!current[field]) return current
+      const next = { ...current }
+      delete next[field]
+      return next
+    })
+  }
+
+  function validateForm() {
+    const errors: ValidationErrors = {}
+    const fullName = form.fullName.trim()
+    const email = form.email.trim()
+    const whatsapp = form.whatsapp.trim()
+    const confirmName = form.confirmName.trim()
+
+    if (fullName.length < 2) {
+      errors.fullName = 'Enter your full name.'
+    }
+
+    if (!email) {
+      errors.email = 'Enter your email address.'
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      errors.email = 'Enter a valid email address.'
+    }
+
+    if (whatsapp && whatsapp.replace(/\D/g, '').length < 8) {
+      errors.whatsapp = 'Enter a valid WhatsApp number or leave this blank.'
+    }
+
+    if (!form.packageType) {
+      errors.packageType = 'Choose a package.'
+    }
+
+    if (isOutsideGtaBlocked) {
+      errors.inGta = 'Choose a GTA property or book a consultation instead.'
+    } else if (!isConsultation) {
+      if (!form.inGta) {
+        errors.inGta = 'Tell us whether the property is inside the GTA.'
+      }
+
+      if (form.inGta === 'Yes' && !form.city) {
+        errors.city = 'Choose the GTA city.'
+      }
+
+      if (!form.moveInDate) {
+        errors.moveInDate = 'Choose your expected move-in date.'
+      } else {
+        const selectedDate = new Date(`${form.moveInDate}T00:00:00`)
+        const today = new Date()
+        today.setHours(0, 0, 0, 0)
+        if (Number.isNaN(selectedDate.getTime())) {
+          errors.moveInDate = 'Choose a valid move-in date.'
+        } else if (selectedDate < today) {
+          errors.moveInDate = 'Move-in date cannot be in the past.'
+        }
+      }
+
+      if (!form.timeframe) {
+        errors.timeframe = 'Choose when you want the viewing completed.'
+      }
+
+      const listingCount = LINKS_BY_PACKAGE[form.packageType] ?? 1
+      form.listingLinks.slice(0, listingCount).forEach((link, index) => {
+        const trimmed = link.trim()
+        if (index === 0 && !trimmed) {
+          errors[`listingLink${index}`] = 'Add at least one property listing link.'
+        } else if (trimmed && !isValidHttpUrl(trimmed)) {
+          errors[`listingLink${index}`] = 'Enter a valid link that starts with http:// or https://.'
+        }
+      })
+
+      const hasChecks = form.checks.length > 0 || Boolean(form.otherCheck.trim())
+      if (!hasChecks) {
+        errors.checks = 'Choose at least one thing for the scout to check.'
+      }
+    }
+
+    if (!isOutsideGtaBlocked) {
+      if (!form.paymentPref) {
+        errors.paymentPref = 'Choose a payment preference.'
+      }
+
+      if (form.acks.length !== ACKNOWLEDGEMENTS.length) {
+        errors.acks = 'Confirm every acknowledgement before submitting.'
+      }
+
+      if (!confirmName) {
+        errors.confirmName = 'Type your full name to confirm.'
+      } else if (fullName && confirmName.toLowerCase() !== fullName.toLowerCase()) {
+        errors.confirmName = 'This must match the name entered above.'
+      }
+    }
+
+    return errors
+  }
 
   useGSAP(
     () => {
@@ -473,13 +597,18 @@ function App() {
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
 
-    if (isOutsideGtaBlocked) {
+    const errors = validateForm()
+    if (Object.keys(errors).length > 0) {
+      setValidationErrors(errors)
       setStatus('error')
       setStatusMessage(
-        'We can only accept properties inside the Greater Toronto Area right now. Please choose a GTA property or book a consultation instead.',
+        isOutsideGtaBlocked
+          ? 'We can only accept properties inside the Greater Toronto Area right now. Please choose a GTA property or book a consultation instead.'
+          : 'Please fix the highlighted fields before sending your request.',
       )
       return
     }
+    setValidationErrors({})
 
     const links = form.listingLinks.map((link) => link.trim()).filter(Boolean)
     const checks = [
@@ -866,16 +995,23 @@ function App() {
           </div>
         </div>
 
-        <form className="request-form" onSubmit={handleSubmit}>
+        <form className="request-form" onSubmit={handleSubmit} noValidate>
           <div className="form-grid">
             <label>
               Name
               <input
                 required
                 value={form.fullName}
-                onChange={(event) => setForm({ ...form, fullName: event.target.value })}
+                onChange={(event) => setFormValue('fullName', event.target.value)}
                 autoComplete="name"
+                aria-invalid={Boolean(validationErrors.fullName)}
+                aria-describedby={validationErrors.fullName ? 'fullName-error' : undefined}
               />
+              {validationErrors.fullName && (
+                <span className="field-error" id="fullName-error">
+                  {validationErrors.fullName}
+                </span>
+              )}
             </label>
             <label>
               Email (primary contact)
@@ -883,29 +1019,50 @@ function App() {
                 required
                 type="email"
                 value={form.email}
-                onChange={(event) => setForm({ ...form, email: event.target.value })}
+                onChange={(event) => setFormValue('email', event.target.value)}
                 autoComplete="email"
+                aria-invalid={Boolean(validationErrors.email)}
+                aria-describedby={validationErrors.email ? 'email-error' : undefined}
               />
+              {validationErrors.email && (
+                <span className="field-error" id="email-error">
+                  {validationErrors.email}
+                </span>
+              )}
             </label>
             <label>
               <span>WhatsApp number <span className="optional">(optional)</span></span>
               <input
                 value={form.whatsapp}
-                onChange={(event) => setForm({ ...form, whatsapp: event.target.value })}
+                onChange={(event) => setFormValue('whatsapp', event.target.value)}
                 autoComplete="tel"
+                aria-invalid={Boolean(validationErrors.whatsapp)}
+                aria-describedby={validationErrors.whatsapp ? 'whatsapp-error' : undefined}
               />
+              {validationErrors.whatsapp && (
+                <span className="field-error" id="whatsapp-error">
+                  {validationErrors.whatsapp}
+                </span>
+              )}
             </label>
             <label>
               Package
               <select
                 value={form.packageType}
-                onChange={(event) => setForm({ ...form, packageType: event.target.value })}
+                onChange={(event) => setFormValue('packageType', event.target.value)}
+                aria-invalid={Boolean(validationErrors.packageType)}
+                aria-describedby={validationErrors.packageType ? 'packageType-error' : undefined}
               >
                 <option>Essential</option>
                 <option>Signature</option>
                 <option value="Consultation">Consultation  -  30-minute call ($30)</option>
                 <option>Just add-ons (e.g. airport pickup)</option>
               </select>
+              {validationErrors.packageType && (
+                <span className="field-error" id="packageType-error">
+                  {validationErrors.packageType}
+                </span>
+              )}
             </label>
             {!isConsultation && (
               <label>
@@ -913,7 +1070,17 @@ function App() {
                 <select
                   required
                   value={form.inGta}
-                  onChange={(event) => setForm({ ...form, inGta: event.target.value, city: '' })}
+                  onChange={(event) => {
+                    setForm((current) => ({ ...current, inGta: event.target.value, city: '' }))
+                    clearValidationError('inGta')
+                    clearValidationError('city')
+                    if (status === 'error') {
+                      setStatus('idle')
+                      setStatusMessage('')
+                    }
+                  }}
+                  aria-invalid={Boolean(validationErrors.inGta)}
+                  aria-describedby={validationErrors.inGta ? 'inGta-error' : undefined}
                 >
                   <option value="" disabled>
                     Select an answer
@@ -921,6 +1088,11 @@ function App() {
                   <option>Yes</option>
                   <option>No</option>
                 </select>
+                {validationErrors.inGta && (
+                  <span className="field-error" id="inGta-error">
+                    {validationErrors.inGta}
+                  </span>
+                )}
               </label>
             )}
             {!isConsultation && form.inGta === 'Yes' && (
@@ -929,7 +1101,9 @@ function App() {
                 <select
                   required
                   value={form.city}
-                  onChange={(event) => setForm({ ...form, city: event.target.value })}
+                  onChange={(event) => setFormValue('city', event.target.value)}
+                  aria-invalid={Boolean(validationErrors.city)}
+                  aria-describedby={validationErrors.city ? 'city-error' : undefined}
                 >
                   <option value="" disabled>
                     Select a city
@@ -938,6 +1112,11 @@ function App() {
                     <option key={city}>{city}</option>
                   ))}
                 </select>
+                {validationErrors.city && (
+                  <span className="field-error" id="city-error">
+                    {validationErrors.city}
+                  </span>
+                )}
               </label>
             )}
             {!isConsultation && form.inGta === 'No' && (
@@ -960,8 +1139,15 @@ function App() {
                   required
                   type="date"
                   value={form.moveInDate}
-                  onChange={(event) => setForm({ ...form, moveInDate: event.target.value })}
+                  onChange={(event) => setFormValue('moveInDate', event.target.value)}
+                  aria-invalid={Boolean(validationErrors.moveInDate)}
+                  aria-describedby={validationErrors.moveInDate ? 'moveInDate-error' : undefined}
                 />
+                {validationErrors.moveInDate && (
+                  <span className="field-error" id="moveInDate-error">
+                    {validationErrors.moveInDate}
+                  </span>
+                )}
               </label>
             )}
           </div>
@@ -972,7 +1158,9 @@ function App() {
               <select
                 required
                 value={form.timeframe}
-                onChange={(event) => setForm({ ...form, timeframe: event.target.value })}
+                onChange={(event) => setFormValue('timeframe', event.target.value)}
+                aria-invalid={Boolean(validationErrors.timeframe)}
+                aria-describedby={validationErrors.timeframe ? 'timeframe-error' : undefined}
               >
                 <option value="" disabled>
                   Select a timeframe
@@ -981,6 +1169,11 @@ function App() {
                   <option key={option}>{option}</option>
                 ))}
               </select>
+              {validationErrors.timeframe && (
+                <span className="field-error" id="timeframe-error">
+                  {validationErrors.timeframe}
+                </span>
+              )}
             </label>
           )}
 
@@ -999,9 +1192,23 @@ function App() {
                   const listingLinks = [...form.listingLinks]
                   listingLinks[index] = event.target.value
                   setForm({ ...form, listingLinks })
+                  clearValidationError(`listingLink${index}`)
+                  if (status === 'error') {
+                    setStatus('idle')
+                    setStatusMessage('')
+                  }
                 }}
                 placeholder="https://..."
+                aria-invalid={Boolean(validationErrors[`listingLink${index}`])}
+                aria-describedby={
+                  validationErrors[`listingLink${index}`] ? `listingLink${index}-error` : undefined
+                }
               />
+              {validationErrors[`listingLink${index}`] && (
+                <span className="field-error" id={`listingLink${index}-error`}>
+                  {validationErrors[`listingLink${index}`]}
+                </span>
+              )}
             </label>
           ))}
 
@@ -1021,14 +1228,19 @@ function App() {
                   <input
                     type="checkbox"
                     checked={form.checks.includes(option)}
-                    onChange={(event) =>
+                    onChange={(event) => {
                       setForm({
                         ...form,
                         checks: event.target.checked
                           ? [...form.checks, option]
                           : form.checks.filter((item) => item !== option),
                       })
-                    }
+                      clearValidationError('checks')
+                      if (status === 'error') {
+                        setStatus('idle')
+                        setStatusMessage('')
+                      }
+                    }}
                   />
                   {option}
                 </label>
@@ -1037,11 +1249,19 @@ function App() {
                 Other:
                 <input
                   value={form.otherCheck}
-                  onChange={(event) => setForm({ ...form, otherCheck: event.target.value })}
+                  onChange={(event) => {
+                    setFormValue('otherCheck', event.target.value)
+                    clearValidationError('checks')
+                  }}
                   placeholder="Anything else"
                 />
               </label>
             </div>
+            {validationErrors.checks && (
+              <span className="field-error field-error--block" id="checks-error">
+                {validationErrors.checks}
+              </span>
+            )}
           </fieldset>
           )}
 
@@ -1054,7 +1274,7 @@ function App() {
               <textarea
                 rows={4}
                 value={form.landlordQuestions}
-                onChange={(event) => setForm({ ...form, landlordQuestions: event.target.value })}
+                onChange={(event) => setFormValue('landlordQuestions', event.target.value)}
               />
             </label>
           )}
@@ -1069,7 +1289,7 @@ function App() {
                 <textarea
                   rows={4}
                   value={form.notes}
-                  onChange={(event) => setForm({ ...form, notes: event.target.value })}
+                  onChange={(event) => setFormValue('notes', event.target.value)}
                 />
               </label>
 
@@ -1078,7 +1298,9 @@ function App() {
                 <select
                   required
                   value={form.paymentPref}
-                  onChange={(event) => setForm({ ...form, paymentPref: event.target.value })}
+                  onChange={(event) => setFormValue('paymentPref', event.target.value)}
+                  aria-invalid={Boolean(validationErrors.paymentPref)}
+                  aria-describedby={validationErrors.paymentPref ? 'paymentPref-error' : undefined}
                 >
                   <option value="" disabled>
                     Select a payment method
@@ -1087,6 +1309,11 @@ function App() {
                     <option key={option}>{option}</option>
                   ))}
                 </select>
+                {validationErrors.paymentPref && (
+                  <span className="field-error" id="paymentPref-error">
+                    {validationErrors.paymentPref}
+                  </span>
+                )}
               </label>
 
               <fieldset className="checkbox-fieldset">
@@ -1098,19 +1325,29 @@ function App() {
                         type="checkbox"
                         required
                         checked={form.acks.includes(item)}
-                        onChange={(event) =>
+                        onChange={(event) => {
                           setForm({
                             ...form,
                             acks: event.target.checked
                               ? [...form.acks, item]
                               : form.acks.filter((entry) => entry !== item),
                           })
-                        }
+                          clearValidationError('acks')
+                          if (status === 'error') {
+                            setStatus('idle')
+                            setStatusMessage('')
+                          }
+                        }}
                       />
                       {item}
                     </label>
                   ))}
                 </div>
+                {validationErrors.acks && (
+                  <span className="field-error field-error--block" id="acks-error">
+                    {validationErrors.acks}
+                  </span>
+                )}
               </fieldset>
 
               <label>
@@ -1118,9 +1355,16 @@ function App() {
                 <input
                   required
                   value={form.confirmName}
-                  onChange={(event) => setForm({ ...form, confirmName: event.target.value })}
+                  onChange={(event) => setFormValue('confirmName', event.target.value)}
                   placeholder="Your full name"
+                  aria-invalid={Boolean(validationErrors.confirmName)}
+                  aria-describedby={validationErrors.confirmName ? 'confirmName-error' : undefined}
                 />
+                {validationErrors.confirmName && (
+                  <span className="field-error" id="confirmName-error">
+                    {validationErrors.confirmName}
+                  </span>
+                )}
               </label>
 
               <button className="button primary submit-button" type="submit" disabled={status === 'loading'}>

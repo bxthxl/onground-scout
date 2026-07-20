@@ -1086,6 +1086,20 @@ textarea:focus {
   box-shadow: 0 0 0 4px rgb(217 155 50 / 0.3);
 }
 
+input[aria-invalid='true'],
+select[aria-invalid='true'],
+textarea[aria-invalid='true'] {
+  border-color: #c43a24;
+  background: #fff8f6;
+}
+
+input[aria-invalid='true']:focus,
+select[aria-invalid='true']:focus,
+textarea[aria-invalid='true']:focus {
+  border-color: #c43a24;
+  box-shadow: 0 0 0 4px rgb(196 58 36 / 0.16);
+}
+
 .submit-button {
   width: fit-content;
 }
@@ -1096,6 +1110,18 @@ textarea:focus {
   font-size: 0.88rem;
   font-weight: 600;
   line-height: 1.55;
+}
+
+.field-error {
+  color: #9f2f18;
+  font-size: 0.82rem;
+  font-weight: 750;
+  line-height: 1.45;
+}
+
+.field-error--block {
+  display: block;
+  margin-top: 10px;
 }
 
 .gta-disclaimer {
